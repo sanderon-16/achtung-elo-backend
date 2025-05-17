@@ -52,7 +52,7 @@ app.post("/logGame", async (req, res) => {
     const numPlayers = playerIds.length;
     const gameResult = await client.query(
       `INSERT INTO Game (${pidCols.join(", ")})
-       VALUES (${pidVals.map((_, i) => `$${i + 2}`).join(", ")})
+       VALUES ($1, ${pidVals.map((_, i) => `$${i + 2}`).join(", ")})
        RETURNING game_id`,
       [numPlayers, ...pidVals]
     );
