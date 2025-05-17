@@ -97,7 +97,8 @@ app.post("/logGame", async (req, res) => {
   //   }
 
     await client.query("COMMIT");
-    res.json({ gameId });
+    // res.json({ gameId });
+    res.json({ 0 :"Game logged successfully" });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error(err);
