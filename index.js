@@ -45,18 +45,19 @@ app.post("/logGame", async (req, res) => {
 
       playerIds.push({ ...p, pid });
     }
-  //
-  //   // Insert game
-  //   const pidCols = playerIds.map((p, i) => `pid${i}`);
-  //   const pidVals = playerIds.map(p => p.pid);
-  //   const gameResult = await client.query(
-  //     `INSERT INTO Game (${pidCols.join(", ")})
-  //      VALUES (${pidVals.map((_, i) => `$${i + 1}`).join(", ")})
-  //      RETURNING game_id`,
-  //     pidVals
-  //   );
-  //   const gameId = gameResult.rows[0].game_id;
-  //
+
+    // Insert game
+    const pidCols = playerIds.map((p, i) => `pid${i}`);
+    const pidVals = playerIds.map(p => p.pid);
+    const numPlayers = playerIds.length;
+    const gameResult = await client.query(
+      `INSERT INTO Game (${pidCols.join(", ")})
+       VALUES (${pidVals.map((_, i) => `$${i + 2}`).join(", ")})
+       RETURNING game_id`,
+      [numPlayers, ...pidVals]
+    );
+    const gameId = gameResult.rows[0].game_id;
+
   //   // Insert into PlayerInGame
   //   for (const p of playerIds) {
   //     await client.query(
