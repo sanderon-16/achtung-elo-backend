@@ -66,40 +66,40 @@ app.post("/logGame", async (req, res) => {
         [p.pid, gameId, p.color, p.score]
       );
     }
-  //
-  //   // Simple Elo Update (Winner takes all)
-  //   const sorted = [...playerIds].sort((a, b) => b.score - a.score);
-  //   const K = 32;
-  //
-  //   for (const player of playerIds) {
-  //     const res = await client.query(`SELECT elo FROM Player WHERE pid = $1`, [player.pid]);
-  //     player.elo = res.rows[0].elo;
-  //   }
-  //
-  //   for (let i = 0; i < playerIds.length; i++) {
-  //     for (let j = i + 1; j < playerIds.length; j++) {
-  //       const A = playerIds[i];
-  //       const B = playerIds[j];
-  //
-  //       const EA = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
-  //       const EB = 1 / (1 + Math.pow(10, (A.elo - B.elo) / 400));
-  //
-  //       const SA = A.score > B.score ? 1 : A.score === B.score ? 0.5 : 0;
-  //       const SB = 1 - SA;
-  //
-  //       A.elo += K * (SA - EA);
-  //       B.elo += K * (SB - EB);
-  //     }
-  //   }
-  //
-  //   // Update Elo
-  //   for (const p of playerIds) {
-  //     await client.query(`UPDATE Player SET elo = $1 WHERE pid = $2`, [Math.round(p.elo), p.pid]);
-  //   }
+
+    // Simple Elo Update (Winner takes all) (SUPER GPT-ed - avi this is for you)
+    const sorted = [...playerIds].sort((a, b) => b.score - a.score);
+    const K = 32;
+
+    for (const player of playerIds) {
+      const res = await client.query(`SELECT elo FROM Player WHERE pid = $1`, [player.pid]);
+      player.elo = res.rows[0].elo;
+    }
+
+    for (let i = 0; i < playerIds.length; i++) {
+      for (let j = i + 1; j < playerIds.length; j++) {
+        const A = playerIds[i];
+        const B = playerIds[j];
+
+        const EA = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
+        const EB = 1 / (1 + Math.pow(10, (A.elo - B.elo) / 400));
+
+        const SA = A.score > B.score ? 1 : A.score === B.score ? 0.5 : 0;
+        const SB = 1 - SA;
+
+        A.elo += K * (SA - EA);
+        B.elo += K * (SB - EB);
+      }
+    }
+
+    // Update Elo
+    for (const p of playerIds) {
+      await client.query(`UPDATE Player SET elo = $1 WHERE pid = $2`, [Math.round(p.elo), p.pid]);
+    }
 
     await client.query("COMMIT");
-    // res.json({ gameId });
-    res.json({ 0 :"Game logged successfully" });
+    res.json({ gameId });
+    // res.json({ 0 :"Game logged successfully" });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error(err);
