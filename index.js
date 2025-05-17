@@ -51,21 +51,21 @@ app.post("/logGame", async (req, res) => {
     const pidVals = playerIds.map(p => p.pid);
     const numPlayers = playerIds.length;
     const gameResult = await client.query(
-      `INSERT INTO Game (${pidCols.join(", ")})
+      `INSERT INTO Game (num_players, ${pidCols.join(", ")})
        VALUES ($1, ${pidVals.map((_, i) => `$${i + 2}`).join(", ")})
        RETURNING game_id`,
       [numPlayers, ...pidVals]
     );
     const gameId = gameResult.rows[0].game_id;
 
-  //   // Insert into PlayerInGame
-  //   for (const p of playerIds) {
-  //     await client.query(
-  //       `INSERT INTO PlayerInGame (pid, game_id, color, score)
-  //        VALUES ($1, $2, $3, $4)`,
-  //       [p.pid, gameId, p.color, p.score]
-  //     );
-  //   }
+    // Insert into PlayerInGame
+    for (const p of playerIds) {
+      await client.query(
+        `INSERT INTO PlayerInGame (pid, game_id, color, score)
+         VALUES ($1, $2, $3, $4)`,
+        [p.pid, gameId, p.color, p.score]
+      );
+    }
   //
   //   // Simple Elo Update (Winner takes all)
   //   const sorted = [...playerIds].sort((a, b) => b.score - a.score);
