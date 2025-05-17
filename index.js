@@ -45,56 +45,56 @@ app.post("/logGame", async (req, res) => {
 
       playerIds.push({ ...p, pid });
     }
-
-    // Insert game
-    const pidCols = playerIds.map((p, i) => `pid${i}`);
-    const pidVals = playerIds.map(p => p.pid);
-    const gameResult = await client.query(
-      `INSERT INTO Game (${pidCols.join(", ")})
-       VALUES (${pidVals.map((_, i) => `$${i + 1}`).join(", ")})
-       RETURNING game_id`,
-      pidVals
-    );
-    const gameId = gameResult.rows[0].game_id;
-
-    // Insert into PlayerInGame
-    for (const p of playerIds) {
-      await client.query(
-        `INSERT INTO PlayerInGame (pid, game_id, color, score)
-         VALUES ($1, $2, $3, $4)`,
-        [p.pid, gameId, p.color, p.score]
-      );
-    }
-
-    // Simple Elo Update (Winner takes all)
-    const sorted = [...playerIds].sort((a, b) => b.score - a.score);
-    const K = 32;
-
-    for (const player of playerIds) {
-      const res = await client.query(`SELECT elo FROM Player WHERE pid = $1`, [player.pid]);
-      player.elo = res.rows[0].elo;
-    }
-
-    for (let i = 0; i < playerIds.length; i++) {
-      for (let j = i + 1; j < playerIds.length; j++) {
-        const A = playerIds[i];
-        const B = playerIds[j];
-
-        const EA = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
-        const EB = 1 / (1 + Math.pow(10, (A.elo - B.elo) / 400));
-
-        const SA = A.score > B.score ? 1 : A.score === B.score ? 0.5 : 0;
-        const SB = 1 - SA;
-
-        A.elo += K * (SA - EA);
-        B.elo += K * (SB - EB);
-      }
-    }
-
-    // Update Elo
-    for (const p of playerIds) {
-      await client.query(`UPDATE Player SET elo = $1 WHERE pid = $2`, [Math.round(p.elo), p.pid]);
-    }
+  //
+  //   // Insert game
+  //   const pidCols = playerIds.map((p, i) => `pid${i}`);
+  //   const pidVals = playerIds.map(p => p.pid);
+  //   const gameResult = await client.query(
+  //     `INSERT INTO Game (${pidCols.join(", ")})
+  //      VALUES (${pidVals.map((_, i) => `$${i + 1}`).join(", ")})
+  //      RETURNING game_id`,
+  //     pidVals
+  //   );
+  //   const gameId = gameResult.rows[0].game_id;
+  //
+  //   // Insert into PlayerInGame
+  //   for (const p of playerIds) {
+  //     await client.query(
+  //       `INSERT INTO PlayerInGame (pid, game_id, color, score)
+  //        VALUES ($1, $2, $3, $4)`,
+  //       [p.pid, gameId, p.color, p.score]
+  //     );
+  //   }
+  //
+  //   // Simple Elo Update (Winner takes all)
+  //   const sorted = [...playerIds].sort((a, b) => b.score - a.score);
+  //   const K = 32;
+  //
+  //   for (const player of playerIds) {
+  //     const res = await client.query(`SELECT elo FROM Player WHERE pid = $1`, [player.pid]);
+  //     player.elo = res.rows[0].elo;
+  //   }
+  //
+  //   for (let i = 0; i < playerIds.length; i++) {
+  //     for (let j = i + 1; j < playerIds.length; j++) {
+  //       const A = playerIds[i];
+  //       const B = playerIds[j];
+  //
+  //       const EA = 1 / (1 + Math.pow(10, (B.elo - A.elo) / 400));
+  //       const EB = 1 / (1 + Math.pow(10, (A.elo - B.elo) / 400));
+  //
+  //       const SA = A.score > B.score ? 1 : A.score === B.score ? 0.5 : 0;
+  //       const SB = 1 - SA;
+  //
+  //       A.elo += K * (SA - EA);
+  //       B.elo += K * (SB - EB);
+  //     }
+  //   }
+  //
+  //   // Update Elo
+  //   for (const p of playerIds) {
+  //     await client.query(`UPDATE Player SET elo = $1 WHERE pid = $2`, [Math.round(p.elo), p.pid]);
+  //   }
 
     await client.query("COMMIT");
     res.json({ gameId });
